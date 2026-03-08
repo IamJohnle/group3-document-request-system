@@ -1,14 +1,70 @@
 <?php
 
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\DocumentRequestController;
+use App\Http\Middleware\AdminMiddleware;
+use App\Models\DocumentType;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
+use Inertia\Inertia;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+// 1. PUBLIC ROUTE: The Welcome Page
+Route::get('/', function () {
+    return Inertia::render('welcome', [
+        'canRegister' => true,
+    ]);
+})->name('home');
 
+// 2. PROTECTED ROUTES (Must be logged in)
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('/dashboard', function () {
+        $user = Auth::user();
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return Inertia::render('student/Dashboard');
+    })->name('dashboard');
+
+    // --- ADMIN MODULE ---
+    Route::middleware([AdminMiddleware::class])->group(function () {
+        // Dashboard
+        Route::get('/admin/dashboard', [DocumentRequestController::class, 'adminIndex'])->name('admin.dashboard');
+
+        // --- STUDENT MANAGEMENT ---
+        // This renders the admin/students.tsx page
+        Route::get('/admin/students', [StudentController::class, 'index'])->name('admin.students');
+        // This handles the form submission to create student + user
+        Route::post('/admin/students', [StudentController::class, 'store'])->name('admin.students.store');
+
+        // Document Request Management
+        Route::post('/admin/requests/{docRequest}/status', [DocumentRequestController::class, 'updateStatus'])->name('admin.requests.update');
+
+        // Test Route (keep if needed)
+        Route::get('/admin/dashboard-test', function () {
+            return Inertia::render('admin/test-dashboard', [
+                'allRequests' => \App\Models\DocumentRequest::with(['user', 'documentType'])->latest()->get(),
+                'stats' => [
+                    'total' => \App\Models\DocumentRequest::count(),
+                    'pending' => \App\Models\DocumentRequest::where('status', 'Pending')->count(),
+                    'completed' => \App\Models\DocumentRequest::where('status', 'Completed')->count(),
+                ]
+            ]);
+        })->name('admin.dashboard.test');
+    });
+
+    // --- STUDENT MODULE ---
+    Route::get('/history', [DocumentRequestController::class, 'index'])->name('student.history');
+
+    Route::get('/requests/create', function () {
+        return Inertia::render('student/RequestForm', [
+            'availableTypes' => DocumentType::all()
+        ]);
+    })->name('student.requests.create');
+
+    Route::post('/requests', [DocumentRequestController::class, 'store'])->name('student.requests.store');
 });
 
 require __DIR__.'/settings.php';

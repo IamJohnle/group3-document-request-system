@@ -1,163 +1,225 @@
-import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
 import {
-    FileText,
-    Clock,
-    CheckCircle2,
     AlertCircle,
-    Users,
+    CheckCircle,
+    Clock,
+    FileText,
+    Filter,
+    MoreVertical,
+    Search,
     TrendingUp,
-    ArrowUpRight,
-    MoreHorizontal
 } from 'lucide-react';
+import React, { useState } from 'react';
+import AppSidebarLayout from '../../layouts/app/app-sidebar-layout';// Adjust path if necessary
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-    },
+// 1. Types
+interface DocumentRequest {
+    id: number;
+    status: string;
+    purpose: string;
+    copies: number;
+    user: {
+        name: string;
+        email?: string;
+    };
+    document_type: {
+        name: string;
+    };
+}
+
+interface DashboardProps {
+    allRequests: DocumentRequest[];
+    stats: {
+        total: number;
+        pending: number;
+        completed: number;
+    };
+}
+
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/admin/dashboard' },
 ];
 
-export default function Dashboard() {
-    // Mock data for visualization - in a real app, these would come from props
-    const stats = [
-        { label: 'Total Requests', value: '1,284', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'Pending Approval', value: '42', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-        { label: 'Completed Today', value: '15', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+const Dashboard = ({ allRequests, stats }: DashboardProps) => {
+    const [searchTerm, setSearchTerm] = useState<string>('');
+
+    // Derived Stats
+    const rejectedCount = allRequests.filter((r) => r.status === 'Rejected').length;
+    const processingRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
+    const statCards = [
+        { label: 'Total Requests', value: stats.total, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
+        { label: 'Pending Approval', value: stats.pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' },
+        { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
+        { label: 'Rejected', value: rejectedCount, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50 border-red-100' },
     ];
 
-    const recentRequests = [
-        { id: 'DR-1002', name: 'John Doe', document: 'Birth Certificate', status: 'Processing', date: '2 mins ago' },
-        { id: 'DR-1001', name: 'Maria Santos', document: 'Report Card (Form 138)', status: 'Pending', date: '15 mins ago' },
-        { id: 'DR-1000', name: 'James Wilson', document: 'Medical Record', status: 'Completed', date: '1 hour ago' },
-    ];
+    const handleUpdateStatus = (id: number, newStatus: string) => {
+        if (confirm(`Change status to ${newStatus}?`)) {
+            router.post(`/admin/requests/${id}/status`, {
+                status: newStatus
+            }, {
+                preserveScroll: true
+            });
+        }
+    };
+
+    const filteredRequests = allRequests.filter((req) =>
+        req.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.document_type.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppSidebarLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin Dashboard" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6 p-6">
                 {/* Header Section */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">System Overview</h1>
-                        <p className="text-muted-foreground text-sm">Welcome back, Admin. Here is what's happening today.</p>
+                        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+                        <p className="text-muted-foreground text-sm">Overview of document processing and student requests.</p>
                     </div>
-                    <button className="inline-flex items-center justify-center rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900">
-                        Generate Report
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors">
+                            <TrendingUp size={16} /> Reports
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid gap-4 md:grid-cols-3">
-                    {stats.map((stat, i) => (
-                        <div key={i} className="relative overflow-hidden rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:bg-neutral-900">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                                    <h3 className="mt-1 text-3xl font-bold">{stat.value}</h3>
-                                </div>
-                                <div className={`rounded-lg ${stat.bg} p-3 dark:bg-neutral-800`}>
-                                    <stat.icon className={`size-6 ${stat.color}`} />
-                                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {statCards.map((stat, index) => (
+                        <div key={index} className={`p-6 rounded-xl border shadow-sm flex items-center gap-4 bg-white`}>
+                            <div className={`p-3 rounded-lg ${stat.bg} ${stat.color}`}>
+                                <stat.icon size={24} />
                             </div>
-                            <div className="mt-4 flex items-center text-xs text-emerald-600">
-                                <TrendingUp className="mr-1 size-3" />
-                                <span>12% increase from last week</span>
+                            <div>
+                                <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+                                <h3 className="text-2xl font-bold">{stat.value}</h3>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Main Content Area */}
-                <div className="grid gap-6 lg:grid-cols-7">
-
-                    {/* Recent Requests Table (Requirement c & d) */}
-                    <div className="rounded-xl border border-sidebar-border/70 bg-white shadow-sm lg:col-span-4 dark:bg-neutral-900">
-                        <div className="flex items-center justify-between border-b p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Main Table Section */}
+                    <div className="lg:col-span-2 bg-white rounded-xl border shadow-sm overflow-hidden">
+                        <div className="p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <h2 className="font-semibold">Recent Requests</h2>
-                            <button className="text-sm text-blue-600 hover:underline">View All</button>
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search student..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8 pr-3 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-ring outline-none w-full sm:w-64"
+                                    />
+                                </div>
+                                <button className="p-2 border rounded-md hover:bg-gray-50 text-muted-foreground">
+                                    <Filter size={16} />
+                                </button>
+                            </div>
                         </div>
-                        <div className="p-0">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-neutral-50 dark:bg-neutral-800/50">
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50/50 text-xs font-medium text-muted-foreground uppercase">
                                     <tr>
-                                        <th className="px-4 py-3 font-medium">Student</th>
-                                        <th className="px-4 py-3 font-medium">Document</th>
-                                        <th className="px-4 py-3 font-medium">Status</th>
-                                        <th className="px-4 py-3 font-medium"></th>
+                                        <th className="px-6 py-3 border-b">Student</th>
+                                        <th className="px-6 py-3 border-b">Document</th>
+                                        <th className="px-6 py-3 border-b">Status</th>
+                                        <th className="px-6 py-3 border-b text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y">
-                                    {recentRequests.map((req) => (
-                                        <tr key={req.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium">{req.name}</div>
-                                                <div className="text-xs text-muted-foreground">{req.id}</div>
-                                            </td>
-                                            <td className="px-4 py-3">{req.document}</td>
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                                    ${req.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
-                                                      req.status === 'Processing' ? 'bg-blue-100 text-blue-700' :
-                                                      'bg-amber-100 text-amber-700'}`}>
-                                                    {req.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <button className="rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                                    <MoreHorizontal className="size-4 text-muted-foreground" />
-                                                </button>
+                                <tbody className="divide-y text-sm">
+                                    {filteredRequests.length > 0 ? (
+                                        filteredRequests.map((req) => (
+                                            <tr key={req.id} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-6 py-4 font-medium">{req.user.name}</td>
+                                                <td className="px-6 py-4 text-muted-foreground">
+                                                    {req.document_type.name}
+                                                    <span className="block text-xs text-gray-400">{req.copies} copies</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                                        req.status === 'Completed' ? 'bg-green-50 text-green-700 border-green-100' :
+                                                        req.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                                        req.status === 'Processing' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                                        'bg-red-50 text-red-700 border-red-100'
+                                                    }`}>
+                                                        {req.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        <select
+                                                            className="text-xs bg-transparent border rounded p-1 outline-none focus:ring-1 focus:ring-ring"
+                                                            value={req.status}
+                                                            onChange={(e) => handleUpdateStatus(req.id, e.target.value)}
+                                                        >
+                                                            <option value="Pending">Pending</option>
+                                                            <option value="Processing">Processing</option>
+                                                            <option value="Completed">Completed</option>
+                                                            <option value="Rejected">Rejected</option>
+                                                        </select>
+                                                        <button className="text-muted-foreground hover:text-foreground">
+                                                            <MoreVertical size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
+                                                No requests found.
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    {/* Quick Monitoring / System Health (Requirement a & d) */}
-                    <div className="flex flex-col gap-6 lg:col-span-3">
-                        <div className="rounded-xl border border-sidebar-border/70 bg-white p-5 shadow-sm dark:bg-neutral-900">
-                            <h2 className="mb-4 font-semibold">Document Distribution</h2>
+                    {/* Analytics / Sidebar Section */}
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-xl border shadow-sm p-5 space-y-6">
+                            <h2 className="font-semibold">Request Summary</h2>
                             <div className="space-y-4">
-                                {[
-                                    { label: 'Birth Certificates', count: 450, color: 'bg-blue-500' },
-                                    { label: 'Report Cards', count: 320, color: 'bg-purple-500' },
-                                    { label: 'Medical Records', count: 120, color: 'bg-pink-500' },
-                                ].map((item) => (
-                                    <div key={item.label} className="space-y-1">
-                                        <div className="flex justify-between text-xs">
-                                            <span>{item.label}</span>
-                                            <span className="font-medium">{item.count}</span>
-                                        </div>
-                                        <div className="h-2 w-full rounded-full bg-neutral-100 dark:bg-neutral-800">
-                                            <div
-                                                className={`h-2 rounded-full ${item.color}`}
-                                                style={{ width: `${(item.count / 500) * 100}%` }}
-                                            />
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-muted-foreground">Overall Completion Rate</span>
+                                    <span className="font-bold">{processingRate}%</span>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                    <div
+                                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                                        style={{ width: `${processingRate}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t">
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <div className="flex gap-3">
+                                        <AlertCircle className="text-blue-600 shrink-0" size={18} />
+                                        <div>
+                                            <p className="text-sm font-semibold text-blue-900">Attention Required</p>
+                                            <p className="text-xs text-blue-700 mt-1">
+                                                There are {stats.pending} pending requests waiting for your approval.
+                                            </p>
                                         </div>
                                     </div>
-                                ))}
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="group relative overflow-hidden rounded-xl bg-neutral-900 p-5 text-white dark:bg-neutral-100 dark:text-neutral-900">
-                            <div className="relative z-10">
-                                <h3 className="font-semibold">User Management</h3>
-                                <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">Manage 842 registered students and parents.</p>
-                                <button className="mt-4 flex items-center text-sm font-medium hover:underline">
-                                    Go to Users <ArrowUpRight className="ml-1 size-4" />
-                                </button>
-                            </div>
-                            <Users className="absolute -right-4 -bottom-4 size-24 opacity-10" />
                         </div>
                     </div>
-
                 </div>
             </div>
-        </AppLayout>
+        </AppSidebarLayout>
     );
-}
+};
+
+export default Dashboard;

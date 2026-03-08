@@ -1,5 +1,12 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    LayoutGrid,
+    FileText,
+    Users,
+    FileStack,
+    BarChart3,
+    LogOut
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -12,38 +19,51 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
 
 export function AppSidebar() {
+    const { url } = usePage();
+
+    // Define Admin Navigation
+    const adminNavItems = [
+        {
+            title: 'Dashboard',
+            href: '/admin/dashboard', // Adjust based on your actual routes
+            icon: LayoutGrid,
+            isActive: url.startsWith('/admin/dashboard'),
+        },
+        {
+            title: 'Document Requests',
+            href: '/admin/requests',
+            icon: FileText,
+            isActive: url.startsWith('/admin/requests'),
+        },
+        {
+            title: 'Students',
+            href: '/admin/students',
+            icon: Users,
+            isActive: url.startsWith('/admin/students'),
+        },
+        {
+            title: 'Document Types',
+            href: '/admin/document-types',
+            icon: FileStack,
+            isActive: url.startsWith('/admin/document-types'),
+        },
+        {
+            title: 'Reports',
+            href: '/admin/reports',
+            icon: BarChart3,
+            isActive: url.startsWith('/admin/reports'),
+        },
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href="/admin/dashboard">
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -52,11 +72,22 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={adminNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {/* Logout Button directly in the sidebar for easy access */}
+                        <SidebarMenuButton asChild>
+                            <Link
+                                href="/logout"
+                                method="post"
+                                as="button"
+                                className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                            >
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Logout</span>
+                            </Link>
+                        </SidebarMenuButton>
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

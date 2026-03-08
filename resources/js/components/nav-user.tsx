@@ -14,11 +14,17 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
+import type { Auth } from '@/types';
 
 export function NavUser() {
-    const { auth } = usePage().props;
+    const { auth } = usePage().props as { auth?: Auth };
     const { state } = useSidebar();
     const isMobile = useIsMobile();
+
+    // Don't render if auth is not available
+    if (!auth?.user) {
+        return null;
+    }
 
     return (
         <SidebarMenu>

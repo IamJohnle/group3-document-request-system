@@ -13,11 +13,18 @@ class AdminMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle($request, Closure $next) {
-         $user = $request->user();
+    public function handle(Request $request, Closure $next): Response
+{
+    $user = $request->user();
+
+    // Debugging: If you still can't get in, uncomment the next line to see what role you have
+    // dd($user->role);
+
     if ($user && $user->role === 'admin') {
-            return $next($request);
-        }
-     return redirect('/dashboard')->with('error', 'You do not have admin access.'); // Redirect non-admin users to a safe page
+        return $next($request);
+    }
+
+    // If not admin, send them to the student dashboard with an error
+    return redirect('/dashboard')->with('error', 'Unauthorized access.');
 }
 }
