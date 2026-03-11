@@ -32,7 +32,7 @@ export default function History({ requests }: any) {
                             <tbody>
                                 {requests.map((req: any) => (
                                     <tr key={req.id} className="border-b dark:border-neutral-800">
-                                        <td className="p-4">{req.document_type.name}</td>
+                                        <td className="p-4">{req.documentType.name}</td>
                                         <td className="p-4">{new Date(req.created_at).toLocaleDateString()}</td>
                                         <td className="p-4 font-bold">{req.status}</td>
                                     </tr>

@@ -11,7 +11,7 @@ class DocumentRequestController extends Controller
 {
     public function index(Request $request) {
         $user = $request->user();
-        return Inertia::render('student/History', [
+        return Inertia::render('student/History',[
             'requests' => $user->requests()->with('documentType')->latest()->get(),
             'availableTypes' => DocumentType::all()
         ]);
@@ -28,9 +28,9 @@ class DocumentRequestController extends Controller
     }
 
     public function adminIndex() {
-        return Inertia::render('admin/dashboard', [
+        return Inertia::render('admin/dashboard',[
             'allRequests' => DocumentRequest::with(['user', 'documentType'])->latest()->get(),
-            'stats' => [
+            'stats' =>[
                 'total' => DocumentRequest::count(),
                 'pending' => DocumentRequest::where('status', 'Pending')->count(),
                 'completed' => DocumentRequest::where('status', 'Completed')->count(),
@@ -38,9 +38,21 @@ class DocumentRequestController extends Controller
         ]);
     }
 
+    public function indexAdmin() {
+        return Inertia::render('admin/requests', [
+            'requests' => DocumentRequest::with(['user', 'documentType'])->latest()->get(),
+        ]);
+    }
+
+    public function reportsIndex() {
+        return Inertia::render('admin/reports', [
+            'requests' => DocumentRequest::with(['user', 'documentType'])->latest()->get(),
+        ]);
+    }
+
     public function updateStatus(Request $request, DocumentRequest $docRequest) {
-    // Ensure 'status' is in the $fillable array of the DocumentRequest model
-    $docRequest->update($request->validate(['status' => 'required|string']));
-    return back();
-}
+        // Ensure 'status' is in the $fillable array of the DocumentRequest model
+        $docRequest->update($request->validate(['status' => 'required|string']));
+        return back();
+    }
 }

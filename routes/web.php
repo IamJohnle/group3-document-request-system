@@ -32,7 +32,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware([AdminMiddleware::class])->group(function () {
         // Dashboard
         Route::get('/admin/dashboard', [DocumentRequestController::class, 'adminIndex'])->name('admin.dashboard');
+    
+    Route::get('/admin/requests', [DocumentRequestController::class, 'indexAdmin'])->name('admin.requests.index');
 
+    Route::get('/admin/reports', [DocumentRequestController::class, 'reportsIndex'])->name('admin.reports');
+
+// ADD THIS: Document Types Management
+    Route::get('/admin/document-types', [App\Http\Controllers\DocumentTypeController::class, 'index'])->name('admin.document-types.index');
+    Route::post('/admin/document-types', [App\Http\Controllers\DocumentTypeController::class, 'store'])->name('admin.document-types.store');
+    Route::put('/admin/document-types/{id}', [App\Http\Controllers\DocumentTypeController::class, 'update'])->name('admin.document-types.update');
+    Route::delete('/admin/document-types/{id}', [App\Http\Controllers\DocumentTypeController::class, 'destroy'])->name('admin.document-types.destroy');
+
+    
         // --- STUDENT MANAGEMENT ---
         // This renders the admin/students.tsx page
         Route::get('/admin/students', [StudentController::class, 'index'])->name('admin.students');

@@ -9,11 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void {
+ public function up(): void {
     Schema::create('document_types', function (Blueprint $table) {
         $table->id();
-        $table->string('name'); // e.g., "Official Transcript"
-        $table->string('description')->nullable(); // Optional description of the document type
+        $table->string('name');
+        $table->text('description')->nullable();
+        $table->decimal('price', 10, 2)->default(0); // Dagdag ito
+        $table->string('requirements')->nullable(); // Dagdag ito
         $table->timestamps();
     });
 }

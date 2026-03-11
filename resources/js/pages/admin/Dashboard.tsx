@@ -22,7 +22,7 @@ interface DocumentRequest {
         name: string;
         email?: string;
     };
-    document_type: {
+    documentType: {
         name: string;
     };
 }
@@ -66,7 +66,7 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
 
     const filteredRequests = allRequests.filter((req) =>
         req.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        req.document_type.name.toLowerCase().includes(searchTerm.toLowerCase())
+        req.documentType.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -118,7 +118,7 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
                                         className="pl-8 pr-3 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-ring outline-none w-full sm:w-64"
                                     />
                                 </div>
-                                <button className="p-2 border rounded-md hover:bg-gray-50 text-muted-foreground">
+                                <button className="p-2 border rounded-md hover:bg-gray-50 text-muted-foreground" title="Filter">
                                     <Filter size={16} />
                                 </button>
                             </div>
@@ -140,7 +140,7 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
                                             <tr key={req.id} className="hover:bg-gray-50/50 transition-colors">
                                                 <td className="px-6 py-4 font-medium">{req.user.name}</td>
                                                 <td className="px-6 py-4 text-muted-foreground">
-                                                    {req.document_type.name}
+                                                    {req.documentType.name}
                                                     <span className="block text-xs text-gray-400">{req.copies} copies</span>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -159,13 +159,14 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
                                                             className="text-xs bg-transparent border rounded p-1 outline-none focus:ring-1 focus:ring-ring"
                                                             value={req.status}
                                                             onChange={(e) => handleUpdateStatus(req.id, e.target.value)}
+                                                            aria-label="Update request status"
                                                         >
                                                             <option value="Pending">Pending</option>
                                                             <option value="Processing">Processing</option>
                                                             <option value="Completed">Completed</option>
                                                             <option value="Rejected">Rejected</option>
                                                         </select>
-                                                        <button className="text-muted-foreground hover:text-foreground">
+                                                        <button className="text-muted-foreground hover:text-foreground" title="More options">
                                                             <MoreVertical size={16} />
                                                         </button>
                                                     </div>
