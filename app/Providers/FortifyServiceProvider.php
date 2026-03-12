@@ -87,5 +87,23 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+
+        // --- custom login response to send admins to their dashboard ---
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\LoginResponse::class,
+            function () {
+                return new class implements \Laravel\Fortify\Contracts\LoginResponse {
+                    public function toResponse($request)
+                    {
+                        $user = $request->user();
+                        $target = $user && $user->role === 'admin'
+                            ? '/admin/dashboard'
+                            : '/dashboard';
+
+                        return redirect()->intended($target);
+                    }
+                };
+            }
+        );
     }
 }

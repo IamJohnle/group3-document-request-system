@@ -1,7 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { dashboard, login, register } from '@/routes';
 
-
 export default function Welcome({
     canRegister = true,
 }: {
@@ -13,7 +12,6 @@ export default function Welcome({
     const auth = (props as any).auth || { user: null };
 
     return (
-
         <>
             <Head title="Welcome">
                 <link rel="preconnect" href="https://fonts.bunny.net" />

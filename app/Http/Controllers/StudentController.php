@@ -23,26 +23,30 @@ class StudentController extends Controller
         return Inertia::render('admin/students/create');
     }
 
-    // Process the registration
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'first_name'     => 'required|string|max:255',
-            'last_name'      => 'required|string|max:255',
-            'middle_name'    => 'nullable|string|max:255',
-            'email'          => 'required|email|unique:users,email', // Important: unique in users
-            'student_id'     => 'required|string|unique:students,student_id',
-            'course'         => 'required|string',
-            'year_level'     => 'required|string',
-            'section'        => 'nullable|string',
-            'contact_number' => 'nullable|string',
-        ]);
+   public function store(Request $request)
+        {
+            $validated = $request->validate([
+                'first_name'     => 'required|string|max:255',
+                'last_name'      => 'required|string|max:255',
+                'middle_name'    => 'nullable|string|max:255',
+                'email'          => 'required|email|unique:users,email',
+                'password'       => 'required|string|min:8|confirmed',
+                'student_id'     => 'required|string|unique:students,student_id',
+                'course'         => 'required|string',
+                'year_level'     => 'required|string',
+                'section'        => 'nullable|string',
+                'contact_number' => 'nullable|string',
+            ]);
 
-        // When we create the Student, the "booted" method in
-        // the Student Model automatically creates the User account.
-        Student::create($validated);
+            // Create a new student instance but don't save yet
+            $student = new Student($validated);
 
-        return redirect()->route('admin.students.students')
-            ->with('message', 'Student and User account created successfully!');
-    }
+            // Pass the password to the model so the "booted" method can see it
+            $student->password_from_form = $request->password;
+
+            $student->save();
+
+            return redirect()->route('login') // Redirect to login after registration
+                ->with('message', 'Registration successful! Please log in.');
+        }
 }

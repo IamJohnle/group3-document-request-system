@@ -1,47 +1,56 @@
-import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+// pages/student/History.tsx
+import { Head } from '@inertiajs/react';
+import React from 'react';
+import AppSidebarLayout from '../../layouts/app/app-sidebar-layout';
+import StatusBadge from './components/StatusBadge';
 
-export default function History({ requests }: any) {
-    const createRequestUrl = '/requests/create';
-    return (
-        <AppLayout breadcrumbs={[{ title: 'My Requests', href: '/history' }]}>
-            <Head title="Request History" />
-            <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">My Requests</h1>
-                    <Link
-                        href={createRequestUrl}
-                        className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold"
-                    >
-                        New Request
-                    </Link>
-                </div>
-
-                <div className="bg-white dark:bg-neutral-900 border rounded shadow-sm">
-                    {requests.length === 0 ? (
-                        <p className="p-10 text-center text-neutral-500">No requests found.</p>
-                    ) : (
-                        <table className="w-full text-left">
-                            <thead className="border-b dark:border-neutral-800">
-                                <tr>
-                                    <th className="p-4">Document</th>
-                                    <th className="p-4">Date</th>
-                                    <th className="p-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {requests.map((req: any) => (
-                                    <tr key={req.id} className="border-b dark:border-neutral-800">
-                                        <td className="p-4">{req.document_type.name}</td>
-                                        <td className="p-4">{new Date(req.created_at).toLocaleDateString()}</td>
-                                        <td className="p-4 font-bold">{req.status}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-            </div>
-        </AppLayout>
-    );
+interface HistoryProps {
+  requests: Array<{ id: number; reference: string; document_type: { name: string }; created_at: string; status: string }>;
 }
+
+const History = ({ requests }: HistoryProps) => {
+  return (
+    <AppSidebarLayout>
+      <Head title="Request History" />
+      <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">My Request History</h1>
+        <input type="text" placeholder="Search requests..." className="border rounded-md px-3 py-1 text-sm w-64" />
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Ref ID</th>
+              <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Document</th>
+              <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Date Requested</th>
+              <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {requests.map((r) => (
+              <tr key={r.id}>
+                <td className="px-6 py-4 font-mono text-sm text-gray-600">REQ-{r.id}</td>
+                <td className="px-6 py-4 font-medium">{r.document_type.name}</td>
+                <td className="px-6 py-4 text-sm">
+                  {new Date(r.created_at).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4">
+                  <StatusBadge status={r.status} />
+                </td>
+                <td className="px-6 py-4">
+                  <button className="text-blue-600 text-sm font-bold hover:underline">View Details</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </AppSidebarLayout>
+  );
+};
+
+export default History;
