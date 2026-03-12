@@ -20,11 +20,11 @@ class Student extends Model
         'contact_number',
         'birth_date',
         'gender',
-        'address',
-        'student_id',
-        'course',
-        'year_level',
-        'section',
+        'street',
+        'barangay',
+        'municipality',
+        'province',
+        'religion',
         'enrollment_date',
         'is_active',
     ];
@@ -32,17 +32,28 @@ class Student extends Model
     protected static function booted()
     {
         static::creating(function ($student) {
-            // 1. Create the User record
-            // We combine first and last name for the User 'name' field
-            $user = User::create([
-                'name'     => $student->first_name . ' ' . $student->last_name,
-                'email'    => $student->email,
-                'password' => Hash::make('password123'), // Set a default or use Str::random(12)
-                'role'     => 'student',
-            ]);
+            // only create a User if one hasn't been linked yet
+            if (!$student->user_id) {
+                // 1. Create the User record
+                // We combine first and last name for the User 'name' field
+                $userData = [
+                    'name'  => $student->first_name . ' ' . $student->last_name,
+                    'email' => $student->email,
+                    'role'  => 'student',
+                ];
 
-            // 2. Link the new User's ID to this Student
-            $student->user_id = $user->id;
+                // if the student model has a temporary password attribute (not persisted)
+                if (isset($student->password)) {
+                    $userData['password'] = Hash::make($student->password);
+                } else {
+                    $userData['password'] = Hash::make('password123');
+                }
+
+                $user = User::create($userData);
+
+                // 2. Link the new User's ID to this Student
+                $student->user_id = $user->id;
+            }
         });
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class StudentController extends Controller
@@ -30,19 +31,42 @@ class StudentController extends Controller
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
             'middle_name'    => 'nullable|string|max:255',
-            'email'          => 'required|email|unique:users,email', // Important: unique in users
-            'student_id'     => 'required|string|unique:students,student_id',
-            'course'         => 'required|string',
-            'year_level'     => 'required|string',
-            'section'        => 'nullable|string',
-            'contact_number' => 'nullable|string',
+            'gender'         => 'required|string|in:male,female,other',
+            'birthdate'      => 'required|date',
+            'street'         => 'required|string|max:255',
+            'barangay'       => 'required|string|max:255',
+            'municipality'   => 'required|string|max:255',
+            'province'       => 'required|string|max:255',
+            'religion'       => 'nullable|string|max:255',
+            'contact_number' => 'nullable|string|max:50',
+            'email'          => 'required|email|unique:users,email',
+            'password'       => 'required|string|min:6',
         ]);
 
-        // When we create the Student, the "booted" method in
-        // the Student Model automatically creates the User account.
-        Student::create($validated);
+        // map form keys to database columns
+        $studentData = $validated;
+        $studentData['birth_date'] = $studentData['birthdate'];
+        unset($studentData['birthdate']);
 
-        return redirect()->route('admin.students.students')
+        // address parts are stored directly, no concatenation needed
+
+        // remove password from student data, but keep it temporarily for user creation
+        $password = $studentData['password'];
+        unset($studentData['password']);
+
+        // create user first so we control the password
+        $user = User::create([
+            'name'     => $studentData['first_name'] . ' ' . $studentData['last_name'],
+            'email'    => $studentData['email'],
+            'password' => Hash::make($password),
+            'role'     => 'student',
+        ]);
+
+        $studentData['user_id'] = $user->id;
+
+        Student::create($studentData);
+
+        return redirect()->route('admin.students')
             ->with('message', 'Student and User account created successfully!');
     }
 }
