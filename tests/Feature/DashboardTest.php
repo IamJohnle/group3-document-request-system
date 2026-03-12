@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @property \App\Models\User $student
+ * @property \App\Models\User $admin
+ */
+
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
