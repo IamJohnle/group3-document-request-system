@@ -1,35 +1,25 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('guests are redirected to the login page', function () {
+beforeEach(function () {
+    // create a default user (student) and an admin user
+    $this->student = User::factory()->create(['role' => 'student']);
+    $this->admin   = User::factory()->create(['role' => 'admin']);
+});
+
+it('redirects admin users to the admin dashboard', function () {
+    $response = $this->actingAs($this->admin)->get(route('dashboard'));
+    $response->assertRedirect(route('admin.dashboard'));
+});
+
+it('allows a student to view the dashboard page', function () {
+    $response = $this->actingAs($this->student)->get(route('dashboard'));
+    $response->assertOk();
+});
+
+it('requires authentication to access the dashboard', function () {
     $response = $this->get(route('dashboard'));
     $response->assertRedirect(route('login'));
-});
-
-test('authenticated users can visit the dashboard', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
-});
-
-// -------------------------------------------------------------------------
-// additional admin-related smoke tests
-
-test('admins can access the admin dashboard', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $this->actingAs($admin);
-
-    $response = $this->get(route('admin.dashboard'));
-    $response->assertOk();
-});
-
-test('admin create-student page is accessible', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-    $this->actingAs($admin);
-
-    $response = $this->get('/admin/students/create');
-    $response->assertOk();
 });

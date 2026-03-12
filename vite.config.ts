@@ -17,8 +17,13 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
+        // When the project has many routes, the artisan command can produce
+        // a large amount of output which may exceed Node's default stdout
+        // buffer and crash the dev/build process.  We only need form variants
+        // for now so disable route generation entirely.
         wayfinder({
             formVariants: true,
+            routes: false,
         }),
     ],
     esbuild: {

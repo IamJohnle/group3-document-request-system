@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DocumentType extends Model
 {
     // Allow these fields to be filled
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'price', 'requirements'];
 
     /**
      * Relationship: One Document Type has many requests.
