@@ -85,7 +85,7 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
 
     const handleUpdateStatus = (id: number, newStatus: string) => {
         router.post(
-            `/admin/requests/${id}/status`,
+            route('admin.requests.status', { docRequest: id }),
             { status: newStatus },
             { preserveScroll: true },
         );

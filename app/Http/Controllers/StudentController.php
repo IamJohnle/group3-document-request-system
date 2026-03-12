@@ -12,7 +12,8 @@ class StudentController extends Controller
     // List all students
     public function index()
     {
-        return Inertia::render('admin/students', [
+        // page filename is now Students.tsx so match casing
+        return Inertia::render('admin/Students', [
             'students' => Student::with('user')->latest()->get()
         ]);
     }
@@ -20,6 +21,7 @@ class StudentController extends Controller
     // Show the "Add Student" form
     public function create()
     {
+        // subfolder for student pages is still lowercase but name of file is create.tsx
         return Inertia::render('admin/students/create');
     }
 

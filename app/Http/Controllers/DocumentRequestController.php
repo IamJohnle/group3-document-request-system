@@ -72,7 +72,10 @@ class DocumentRequestController extends Controller
      */
     public function adminIndex()
     {
-        return Inertia::render('admin/dashboard', [
+        // NOTE: the page file is named Dashboard.tsx (capital D), so the
+        // Inertia name must match exactly. Previously this was lower‑case and
+        // resulted in the "Page not found" error in the browser.
+        return Inertia::render('admin/Dashboard', [
             'allRequests' => DocumentRequest::with(['user', 'documentType'])->latest()->get(),
             'stats' => [
                 'total' => DocumentRequest::count(),

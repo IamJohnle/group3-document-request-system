@@ -58,10 +58,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Student Management
         Route::get('/admin/students', [StudentController::class, 'index'])->name('admin.students');
+        // form page for adding a new student
+        Route::get('/admin/students/create', [StudentController::class, 'create'])->name('admin.students.create');
         Route::post('/admin/students', [StudentController::class, 'store'])->name('admin.students.store');
 
         // Request Management
-        Route::post('/admin/requests/{docRequest}/status', [DocumentRequestController::class, 'updateStatus'])->name('admin.requests.update');
+        // give the status update route its own name so it doesn't collide
+        // with the regular request update route.  The dashboard used a
+        // hard‑coded URL but we'll switch it to use the named route too.
+        Route::post('/admin/requests/{docRequest}/status', [DocumentRequestController::class, 'updateStatus'])
+            ->name('admin.requests.status');
     });
 
     // --- STUDENT MODULE ---
