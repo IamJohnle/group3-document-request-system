@@ -5,10 +5,13 @@ import AppSidebarLayout from '../../layouts/app/app-sidebar-layout';
 import StatusBadge from './components/StatusBadge';
 interface DashboardProps {
   stats: { pending: number; completed: number; actionRequired: number };
-  recentRequests: Array<{ id: number; document_type: { name: string }; created_at: string; status: string }>;
+  recentRequests: Array<{ id: number; documentType: { name: string }; created_at: string; status: string }>;
 }
 
-const Dashboard = ({ stats, recentRequests }: DashboardProps) => {
+const Dashboard = ({
+  stats = { pending: 0, completed: 0, actionRequired: 0 },
+  recentRequests = [],
+}: DashboardProps) => {
 
   return (
     <AppSidebarLayout>
@@ -51,7 +54,7 @@ const Dashboard = ({ stats, recentRequests }: DashboardProps) => {
           <tbody className="divide-y divide-gray-200">
             {recentRequests.map((req) => (
               <tr key={req.id}>
-                <td className="px-6 py-4 font-medium">{req.document_type.name}</td>
+                <td className="px-6 py-4 font-medium">{req.documentType?.name ?? 'Unknown'}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">
                   {new Date(req.created_at).toLocaleDateString()}
                 </td>

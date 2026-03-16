@@ -23,7 +23,7 @@ interface DocumentType {
 
 // 2. Define the Props coming from the Controller
 interface Props {
-    types: DocumentType[]; // Matches DocumentRequestController 'types' => DocumentType::all()
+    documentTypes: DocumentType[]; // Matches DocumentRequestController 'documentTypes' => DocumentType::all()
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,7 +31,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Document Types', href: '/admin/document-types' },
 ];
 
-export default function DocumentTypes({ types }: Props) {
+export default function DocumentTypes(props?: Props) {
+    const documentTypes = props?.documentTypes || [];
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<DocumentType | null>(null);
@@ -86,7 +87,7 @@ export default function DocumentTypes({ types }: Props) {
     };
 
     // 4. Filtering Logic
-    const filteredTypes = types.filter((type) =>
+    const filteredTypes = documentTypes.filter((type) =>
         type.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 

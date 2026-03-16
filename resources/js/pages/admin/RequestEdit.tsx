@@ -13,7 +13,7 @@ interface DocumentRequest {
     status: string;
     purpose: string;
     copies: number;
-    document_type: { id: number; name: string };
+    documentType: { id: number; name: string };
     attachment_url?: string;
 }
 
@@ -33,14 +33,14 @@ export default function RequestEdit({ request, documentTypes }: Props) {
         status: request.status,
         purpose: request.purpose,
         copies: request.copies,
-        document_type_id: request.document_type.id,
+        document_type_id: request.documentType?.id || 0,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // still updating the whole record; the other route handles
         // status changes exclusively
-        form.put(route('admin.requests.update', { docRequest: request.id }));
+        form.put(route('admin.requests.update', { documentRequest: request.id }));
     };
 
     return (

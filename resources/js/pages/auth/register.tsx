@@ -1,7 +1,8 @@
 import { useForm, Head } from '@inertiajs/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
 // REMOVED: import { route } from 'ziggy-js';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,14 @@ export default function Register() {
         password_confirmation: '',
     });
 
+    const formErrorMessages = useMemo(
+        () =>
+            Object.values(errors)
+                .flatMap((value) => (Array.isArray(value) ? value : [value]))
+                .filter(Boolean) as string[],
+        [errors],
+    );
+
     const submit = (e: FormEvent) => {
         e.preventDefault();
 
@@ -42,6 +51,10 @@ export default function Register() {
             description="Enter your academic and personal details"
         >
             <Head title="Register" />
+
+            {formErrorMessages.length ? (
+                <AlertError errors={formErrorMessages} />
+            ) : null}
 
             <form onSubmit={submit} className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

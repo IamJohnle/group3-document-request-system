@@ -5,7 +5,10 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -34,12 +37,45 @@ class CreateNewUser implements CreatesNewUsers
             'contact_number' => ['nullable', 'string'],
         ])->validate();
 
+        // Prevent creating a second student account for the same full name.
+        // We compare case-insensitively and ignore leading/trailing whitespace.
+        $firstName = Str::lower(trim($input['first_name']));
+        $lastName = Str::lower(trim($input['last_name']));
+        $middleName = trim($input['middle_name'] ?? '');
+
+        $nameMatchQuery = \App\Models\Student::whereRaw('LOWER(first_name) = ?', [$firstName])
+            ->whereRaw('LOWER(last_name) = ?', [$lastName]);
+
+        if ($middleName !== '') {
+            $nameMatchQuery->whereRaw('LOWER(middle_name) = ?', [Str::lower($middleName)]);
+        } else {
+            $nameMatchQuery->whereNull('middle_name');
+        }
+
+        if ($nameMatchQuery->exists()) {
+            throw ValidationException::withMessages([
+                'first_name' => __('A student with that full name already exists.'),
+            ]);
+        }
+
         // create the user record first
-        $user = User::create([
-            'name' => $input['first_name'] . ' ' . $input['last_name'],
-            'email' => $input['email'],
-            'password' => $input['password'],
-        ]);
+        try {
+            $user = User::create([
+                'name' => $input['first_name'] . ' ' . $input['last_name'],
+                'email' => $input['email'],
+                'password' => $input['password'],
+            ]);
+        } catch (QueryException $e) {
+            // Convert unique constraint violations into a validation error so
+            // Fortify can display a friendly message instead of a stack trace.
+            if ($e->errorInfo[1] === 1062) {
+                throw ValidationException::withMessages([
+                    'email' => __('The email has already been taken.'),
+                ]);
+            }
+
+            throw $e;
+        }
 
         // then create a student record attached to the new user
         // the student model boot method will *not* create another user, thanks to

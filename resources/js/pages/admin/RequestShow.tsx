@@ -9,7 +9,8 @@ interface DocumentRequest {
     purpose: string;
     copies: number;
     user: { name: string; email?: string };
-    document_type: { name: string };
+    documentType?: { name: string };
+    document_type?: { name: string };
     created_at: string;
     attachment_url?: string;
 }
@@ -31,10 +32,10 @@ export default function RequestShow({ request }: Props) {
             <div className="p-6 max-w-3xl mx-auto bg-white rounded-lg shadow">
                 <h2 className="text-xl font-bold mb-4">Request #{request.id}</h2>
                 <p>
-                    <strong>Student:</strong> {request.user.name} ({request.user.email})
+                    <strong>Student:</strong> {request.user?.name || 'Unknown User'} ({request.user?.email || 'No email'})
                 </p>
                 <p>
-                    <strong>Document Type:</strong> {request.document_type.name}
+                    <strong>Document Type:</strong> {request.document_type?.name || request.documentType?.name || 'Unknown Type'}
                 </p>
                 <p>
                     <strong>Purpose:</strong> {request.purpose}

@@ -1,14 +1,15 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid,
-    FilePlus,    // Icon for "New Request"
-    History,     // Icon for "History"
+    FilePlus,
+    History,
     Users,
     FileStack,
     BarChart3,
     FileText,
     LogOut,
     Settings,
+    UserCircle, // Use UserCircle for "My Information"
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -26,10 +27,8 @@ import {
 export function AppSidebar() {
     const { url } = usePage();
 
-    // Determine if we are in the admin section
     const isAdmin = url.startsWith('/admin');
 
-    // 1. Admin Navigation (Matched to your route:list)
     const adminNavItems = [
         {
             title: 'Dashboard',
@@ -55,7 +54,6 @@ export function AppSidebar() {
             icon: FileStack,
             isActive: url.startsWith('/admin/document-types'),
         },
-        // Note: I added Reports as a placeholder if you decide to add it back
         {
             title: 'Reports',
             href: '/admin/reports',
@@ -64,29 +62,33 @@ export function AppSidebar() {
         },
     ];
 
-    // 2. Student Navigation (Matched to your route:list)
     const studentNavItems = [
         {
             title: 'Dashboard',
-            href: '/dashboard', // From your route:list (GET dashboard)
+            href: '/dashboard',
             icon: LayoutGrid,
             isActive: url === '/dashboard',
         },
         {
             title: 'Request Document',
-            href: '/requests/create', // From your route:list (GET requests/create)
+            href: '/student/requests/create',
             icon: FilePlus,
-            isActive: url === '/requests/create',
+            isActive: url.startsWith('/student/requests'),
+        },
+        {
+            title: 'My Information',
+            href: '/student/information', // Match lowercase route from web.php
+            icon: UserCircle,             // Fixed: Use imported UserCircle icon
+            isActive: url.startsWith('/student/information'),
         },
         {
             title: 'My History',
-            href: '/history', // From your route:list (GET history)
+            href: '/student/history',
             icon: History,
-            isActive: url === '/history',
+            isActive: url.startsWith('/student/history'),
         },
     ];
 
-    // Select items based on the current URL
     const navItems = isAdmin ? adminNavItems : studentNavItems;
     const homeLink = isAdmin ? '/admin/dashboard' : '/dashboard';
 
@@ -110,7 +112,6 @@ export function AppSidebar() {
 
             <SidebarFooter className="space-y-1 border-t p-2">
                 <SidebarMenu>
-                    {/* Settings - Using your GET settings/profile route */}
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
@@ -126,7 +127,6 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
 
-                    {/* Logout Button */}
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild>
                             <Link

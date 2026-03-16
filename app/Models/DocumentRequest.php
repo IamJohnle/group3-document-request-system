@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\DocumentType;
 
 class DocumentRequest extends Model {
     protected $fillable = [
@@ -22,7 +23,8 @@ class DocumentRequest extends Model {
     }
 
     // New Relationship
-    public function documentType(): BelongsTo {
-        return $this->belongsTo(DocumentType::class);
-    }
+   public function documentType(): BelongsTo
+{
+    return $this->belongsTo(DocumentType::class, 'document_type_id');
+}
 }

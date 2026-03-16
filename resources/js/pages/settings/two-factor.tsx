@@ -55,7 +55,10 @@ export default function TwoFactor({
                     />
                     {twoFactorEnabled ? (
                         <div className="flex flex-col items-start justify-start space-y-4">
-                            <Badge variant="default">Enabled</Badge>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="default">Enabled</Badge>
+                                <span className="text-sm text-muted-foreground italic">Protected</span>
+                            </div>
                             <p className="text-muted-foreground">
                                 With two-factor authentication enabled, you will
                                 be prompted for a secure, random pin during
@@ -70,14 +73,14 @@ export default function TwoFactor({
                             />
 
                             <div className="relative inline">
-                                <Form {...disable.form()}>
+                                <Form action={disable.url()} method="delete">
                                     {({ processing }) => (
                                         <Button
                                             variant="destructive"
                                             type="submit"
                                             disabled={processing}
                                         >
-                                            <ShieldBan /> Disable 2FA
+                                            <ShieldBan className="mr-2 h-4 w-4" /> Disable 2FA
                                         </Button>
                                     )}
                                 </Form>
@@ -98,12 +101,13 @@ export default function TwoFactor({
                                     <Button
                                         onClick={() => setShowSetupModal(true)}
                                     >
-                                        <ShieldCheck />
+                                        <ShieldCheck className="mr-2 h-4 w-4" />
                                         Continue setup
                                     </Button>
                                 ) : (
                                     <Form
-                                        {...enable.form()}
+                                        action={enable.url()}
+                                        method="post"
                                         onSuccess={() =>
                                             setShowSetupModal(true)
                                         }
@@ -113,7 +117,7 @@ export default function TwoFactor({
                                                 type="submit"
                                                 disabled={processing}
                                             >
-                                                <ShieldCheck />
+                                                <ShieldCheck className="mr-2 h-4 w-4" />
                                                 Enable 2FA
                                             </Button>
                                         )}

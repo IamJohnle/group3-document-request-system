@@ -1,79 +1,95 @@
 <?php
 
 use App\Http\Controllers\StudentController;
-use App\Http\Controllers\DocumentRequestController;
+use App\Http\Controllers\Admin\RequestController as AdminRequestController;
+use App\Http\Controllers\Student\RequestController as StudentRequestController;
+use App\Http\Controllers\DocumentTypeController;
 use App\Http\Middleware\AdminMiddleware;
-use App\Models\DocumentType;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// 1. PUBLIC ROUTE
-Route::get('/', function () {
-    return Inertia::render('welcome', [
-        'canRegister' => true,
-    ]);
-})->name('home');
+/*
+|--------------------------------------------------------------------------
+| 1. PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::get('/', fn() => Inertia::render('welcome', ['canRegister' => true]))->name('home');
 
-// Convenience aliases for development
-Route::get('/admin/login', fn() => redirect()->route('login'))->name('admin.login');
-Route::get('/student/login', fn() => redirect()->route('login'))->name('student.login');
+// Separate login pages
+Route::get('/admin/login', fn() => Inertia::render('auth/admin-login', [
+    'canResetPassword' => true,
+    'canRegister' => false,
+    'status' => session('status'),
+]))->name('admin.login');
 
-// 2. PROTECTED ROUTES (Must be logged in)
+Route::get('/student/login', fn() => Inertia::render('auth/student-login', [
+    'canResetPassword' => true,
+    'canRegister' => true,
+    'status' => session('status'),
+]))->name('student.login');
+
+
+/*
+|--------------------------------------------------------------------------
+| 2. PROTECTED ROUTES (Must be logged in)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'verified'])->group(function () {
 
     /**
      * DASHBOARD TRAFFIC COP
-     * This checks the user role. If admin, sends to Admin Dashboard.
-     * If student, calls the controller to show Student Dashboard.
+     * Sends Admin to Admin Dashboard, Students to Student Dashboard
      */
     Route::get('/dashboard', function () {
-        $user = Auth::user();
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-        return app(DocumentRequestController::class)->dashboard(request());
+        return Auth::user()->role === 'admin'
+            ? redirect()->route('admin.dashboard')
+            : app(StudentRequestController::class)->dashboard(request());
     })->name('dashboard');
 
     // --- ADMIN MODULE ---
-    Route::middleware([AdminMiddleware::class])->group(function () {
+    Route::middleware([AdminMiddleware::class])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
 
-        // Admin Dashboard & Reports
-        Route::get('/admin/dashboard', [DocumentRequestController::class, 'adminIndex'])->name('admin.dashboard');
+            // Dashboard & Reports
+            Route::get('/dashboard', [AdminRequestController::class, 'dashboard'])->name('dashboard');
+            Route::get('/reports', [AdminRequestController::class, 'reports'])->name('reports');
 
-        // full request management (separate from dashboard summary)
-        Route::get('/admin/requests', [DocumentRequestController::class, 'adminRequests'])->name('admin.requests.index');
-        Route::get('/admin/requests/{docRequest}', [DocumentRequestController::class, 'adminShow'])->name('admin.requests.show');
-        Route::get('/admin/requests/{docRequest}/edit', [DocumentRequestController::class, 'adminEdit'])->name('admin.requests.edit');
-        Route::put('/admin/requests/{docRequest}', [DocumentRequestController::class, 'adminUpdate'])->name('admin.requests.update');
-        Route::delete('/admin/requests/{docRequest}', [DocumentRequestController::class, 'adminDestroy'])->name('admin.requests.destroy');
+            // Request Management
+            Route::resource('requests', AdminRequestController::class)
+                ->only(['index', 'show', 'edit', 'update', 'destroy'])
+                ->parameters(['requests' => 'documentRequest']); // Standardized parameter naming
 
-        Route::get('/admin/reports', [DocumentRequestController::class, 'reportsIndex'])->name('admin.reports');
+            // Custom Status Update (used by the dashboard toggle)
+            Route::post('requests/{documentRequest}/status', [AdminRequestController::class, 'updateStatus'])->name('requests.status');
 
-        // Document Type Management (Full CRUD in DocumentRequestController)
-        Route::get('/admin/document-types', [DocumentRequestController::class, 'documentTypes'])->name('admin.document-types.index');
-        Route::post('/admin/document-types', [DocumentRequestController::class, 'storeType'])->name('admin.document-types.store');
-        Route::put('/admin/document-types/{id}', [DocumentRequestController::class, 'updateType'])->name('admin.document-types.update');
-        Route::delete('/admin/document-types/{id}', [DocumentRequestController::class, 'destroyType'])->name('admin.document-types.destroy');
+            // Document Type Management
+            Route::resource('document-types', DocumentTypeController::class)->except(['show', 'create', 'edit']);
 
-        // Student Management
-        Route::get('/admin/students', [StudentController::class, 'index'])->name('admin.students');
-        // form page for adding a new student
-        Route::get('/admin/students/create', [StudentController::class, 'create'])->name('admin.students.create');
-        Route::post('/admin/students', [StudentController::class, 'store'])->name('admin.students.store');
-
-        // Request Management
-        // give the status update route its own name so it doesn't collide
-        // with the regular request update route.  The dashboard used a
-        // hard‑coded URL but we'll switch it to use the named route too.
-        Route::post('/admin/requests/{docRequest}/status', [DocumentRequestController::class, 'updateStatus'])
-            ->name('admin.requests.status');
+            // Student Management
+            Route::resource('students', StudentController::class);
     });
 
     // --- STUDENT MODULE ---
-    Route::get('/history', [DocumentRequestController::class, 'index'])->name('student.history');
-    Route::get('/requests/create', [DocumentRequestController::class, 'create'])->name('student.requests.create');
-    Route::post('/requests', [DocumentRequestController::class, 'store'])->name('student.requests.store');
+    Route::prefix('student')->name('student.')->group(function () {
+        // Main Student Views
+        Route::get('/dashboard', [StudentRequestController::class, 'dashboard'])->name('dashboard');
+        Route::get('/history', [StudentRequestController::class, 'history'])->name('history');
+        Route::get('/information', [StudentRequestController::class, 'information'])->name('information');
+        Route::put('/information', [StudentRequestController::class, 'updateInformation'])->name('information.update');
+        
+        // Student Request Resource
+        Route::resource('requests', StudentRequestController::class)
+            ->only(['index', 'show', 'create', 'store'])
+            ->parameters(['requests' => 'documentRequest']); // Matches $documentRequest in Controller
+    });
 });
 
+/*
+|--------------------------------------------------------------------------
+| 3. SETTINGS ROUTES (Standard Laravel)
+|--------------------------------------------------------------------------
+*/
 require __DIR__.'/settings.php';

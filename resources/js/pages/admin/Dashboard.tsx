@@ -31,12 +31,15 @@ interface DashboardProps {
 
 const breadcrumbs = [{ title: 'Dashboard', href: '/admin/dashboard' }];
 
-const Dashboard = ({ allRequests, stats }: DashboardProps) => {
+const Dashboard = ({
+    allRequests = [],
+    stats = { total: 0, pending: 0, completed: 0 },
+}: DashboardProps) => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('All');
 
     const rejectedCount = allRequests.filter(
-        (r) => r.status === 'Rejected',
+        (r) => r?.status === 'Rejected',
     ).length;
     const completionRate =
         stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -74,7 +77,7 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
 
     const filteredRequests = useMemo(() => {
         return allRequests.filter((req) => {
-            const matchesSearch = req.user.name
+            const matchesSearch = (req.user?.name ?? '')
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase());
             const matchesFilter =
@@ -202,10 +205,10 @@ const Dashboard = ({ allRequests, stats }: DashboardProps) => {
                                             className="hover:bg-gray-50"
                                         >
                                             <td className="px-6 py-4 font-medium">
-                                                {req.user.name}
+                                                {req.user?.name ?? 'Unknown'}
                                             </td>
                                             <td className="px-6 py-4 text-gray-500">
-                                                {req.document_type.name}
+                                                {req.document_type?.name ?? 'Unknown'}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span

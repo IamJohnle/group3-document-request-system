@@ -10,7 +10,7 @@ class DocumentTypeController extends Controller
 {
     public function index()
     {
-        return Inertia::render('admin/document-types', [
+        return Inertia::render('admin/Document-types', [
             'documentTypes' => DocumentType::all()
         ]);
     }

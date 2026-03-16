@@ -1,4 +1,4 @@
-﻿import { Head } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import React from 'react';
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 
@@ -7,7 +7,8 @@ interface DocumentRequest {
     status: string;
     created_at: string;
     user: { name: string };
-    documentType: { name: string };
+    documentType?: { name: string };
+    document_type?: { name: string };
 }
 
 interface ReportsProps {
@@ -37,8 +38,8 @@ export default function Reports({ requests = [] }: ReportsProps) {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {requests.map((req) => (
                             <tr key={req.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{req.user.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{req.documentType.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{req.user?.name || 'Unknown User'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{req.document_type?.name || req.documentType?.name || 'Unknown Type'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{req.status}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{new Date(req.created_at).toLocaleDateString()}</td>
                             </tr>
